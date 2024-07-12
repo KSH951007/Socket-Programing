@@ -1,50 +1,62 @@
-﻿namespace ServerCore
-{
-    public class Test()
-    {
+﻿using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
-    }
+namespace ServerCore
+{
+
     internal class Program
     {
-        static object lockObj = new object();
-        static int datas = 0;
-        static void TestThread1()
+        static Listener listener = new Listener();
+
+        static void OnAcceptHandler(Socket clientSocket)
         {
-            lock (lockObj)
+            try
             {
-                for (int i = 0; i < 10; i++)
-                {
+                byte[] recvBuff = new byte[1024];
 
-                    datas++;
-                    Console.WriteLine($"TestThread1 : {datas}");
+                int recvBytes = clientSocket.Receive(recvBuff);
+                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
+                Console.WriteLine($"[From Client] {recvData}");
 
-                }
+                byte[] sendBuff = Encoding.UTF8.GetBytes("Welecom to MMORPG Server !");
+                clientSocket.Send(sendBuff);
+
+                clientSocket.Shutdown(SocketShutdown.Both);
+                clientSocket.Close();
+
+
             }
-        }
-        static void TestThread2()
-        {
-            lock (lockObj)
+            catch (Exception ex)
             {
-                for (int i = 0; i < 10; i++)
-                {
-
-                    Console.WriteLine($"TestThread2 : {datas}");
-
-                }
+                Console.WriteLine(ex.ToString());
             }
+
         }
         static void Main(string[] args)
         {
-            Task t1 = new Task(TestThread1);
-            Task t2 = new Task(TestThread2);
-            t1.RunSynchronously();
-            t2.RunSynchronously();
+            //소캣생성
+            string host = Dns.GetHostName();
+            IPHostEntry ipHost = Dns.GetHostEntry(host);
+            IPAddress iPAddress = ipHost.AddressList[0];
+            IPEndPoint endPoint = new IPEndPoint(iPAddress, 7777);
 
-         
+           
+            try
+            {
 
+                listener.Init(endPoint, OnAcceptHandler) ;
+                while (true)
+                {
+                   
 
-            Task.WaitAll(t1, t2);
-
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+          
 
         }
 
