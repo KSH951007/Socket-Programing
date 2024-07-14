@@ -14,29 +14,39 @@ namespace DumyClient
             IPEndPoint endPoint = new IPEndPoint(iPAddress, 7777);
 
 
-            Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            try
-            {   //서버에 입장문의
-                socket.Connect(endPoint);
-                Console.WriteLine($"Connected To {socket.RemoteEndPoint.ToString()}");
-
-                byte[] sendBuff = Encoding.UTF8.GetBytes("Hello World");
-                int sendBytes = socket.Send(sendBuff);
-                byte[] recvBuff = new byte[1024];
-                int recvBytes = socket.Receive(recvBuff);
-                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
-                Console.WriteLine($"[From Server] {recvData}");
-
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-            }
-            catch (Exception ex)
+            while (true)
             {
-                Console.WriteLine(ex.Message);
+
+                Socket socket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                try
+                {   //서버에 입장문의
+                    socket.Connect(endPoint);
+                    Console.WriteLine($"Connected To {socket.RemoteEndPoint.ToString()}");
+
+                    for (int i = 0; i < 5; i++)
+                    {
+                        byte[] sendBuff = Encoding.UTF8.GetBytes($"Hello World {i}");
+                        int sendBytes = socket.Send(sendBuff);
+                    }
+
+             
+                    byte[] recvBuff = new byte[1024];
+                    int recvBytes = socket.Receive(recvBuff);
+                    string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
+                    Console.WriteLine($"[From Server] {recvData}");
+
+                    socket.Shutdown(SocketShutdown.Both);
+                    socket.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+
+                Thread.Sleep(100);
             }
-         
-           
+
 
         }
     }

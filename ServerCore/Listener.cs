@@ -12,7 +12,7 @@ namespace ServerCore
     {
 
         Socket listenSocket;
-        Action<Socket> onAcceptHandler;
+        Func<Session> sessionFactory;
 
         /*
          클라이언트 소켓의 흐름
@@ -40,13 +40,14 @@ namespace ServerCore
         새로운 스레드를 하나 만든다음 그곳에서 Recsive를 실행하고 데이터 수신을 되기까지 대기
 
          */
-        public void Init(IPEndPoint endPoint, Action<Socket> onAcceptHandler)
+        public void Init(IPEndPoint endPoint, Func<Session> sessionFactory)
         {
             listenSocket = new Socket(endPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            this.onAcceptHandler += onAcceptHandler;
+            this.sessionFactory += sessionFactory;
             listenSocket.Bind(endPoint);
+            
             listenSocket.Listen(10);
-
+            
             SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
             eventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
             RegisterAccept(eventArgs);
@@ -68,7 +69,10 @@ namespace ServerCore
         {
             if (args.SocketError == SocketError.Success)
             {
-                onAcceptHandler.Invoke(args.AcceptSocket);
+
+                Session session = sessionFactory.Invoke();
+                session.Start(args.AcceptSocket);
+                session.OnConnected(args.RemoteEndPoint);
             }
             else
             {

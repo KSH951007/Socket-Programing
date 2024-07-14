@@ -5,34 +5,41 @@ using System.Text;
 namespace ServerCore
 {
 
+    class GameSession : Session
+    {
+        public override void OnConnected(EndPoint endPoint)
+        {
+            Console.WriteLine($"OnConnected : {endPoint}");
+            byte[] sendBuff = Encoding.UTF8.GetBytes("Welecom to MMORPG Server !");
+            Send(sendBuff);
+
+            Thread.Sleep(1000);
+            Disconnect();
+        }
+
+        public override void OnDisconnected(EndPoint endPoint)
+        {
+            Console.WriteLine($"OnDisconnected : {endPoint}");
+        }
+
+        public override void OnRecv(ArraySegment<byte> buffer)
+        {
+            string recvData = Encoding.UTF8.GetString(buffer.Array, 0, buffer.Count);
+            Console.WriteLine($"[From Client] {recvData}");
+        }
+
+        public override void OnSend(int numOfBytes)
+        {
+            Console.WriteLine($"Transferred bytes : {numOfBytes}");
+
+        }
+    }
+
     internal class Program
     {
         static Listener listener = new Listener();
 
-        static void OnAcceptHandler(Socket clientSocket)
-        {
-            try
-            {
-                byte[] recvBuff = new byte[1024];
-
-                int recvBytes = clientSocket.Receive(recvBuff);
-                string recvData = Encoding.UTF8.GetString(recvBuff, 0, recvBytes);
-                Console.WriteLine($"[From Client] {recvData}");
-
-                byte[] sendBuff = Encoding.UTF8.GetBytes("Welecom to MMORPG Server !");
-                clientSocket.Send(sendBuff);
-
-                clientSocket.Shutdown(SocketShutdown.Both);
-                clientSocket.Close();
-
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-
-        }
+      
         static void Main(string[] args)
         {
             //소캣생성
@@ -45,7 +52,7 @@ namespace ServerCore
             try
             {
 
-                listener.Init(endPoint, OnAcceptHandler) ;
+                listener.Init(endPoint, () => { return new GameSession(); }) ;
                 while (true)
                 {
                    
