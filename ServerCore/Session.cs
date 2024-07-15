@@ -10,7 +10,7 @@ namespace ServerCore
 {
 
 
-    internal abstract class Session
+    public abstract class Session
     {
         Socket socket;
         int disconnected = 0;

@@ -8,13 +8,16 @@ using System.Threading.Tasks;
 
 namespace ServerCore
 {
-    internal class Listener
+    public class Listener
     {
 
         Socket listenSocket;
         Func<Session> sessionFactory;
-
+        const int LISTEN_COUNT = 10;
         /*
+        
+        TCP 소켓 프로그래밍 흐름
+
          클라이언트 소켓의 흐름
         1. 클라이언트 소켓을 생성
         2. 서버소켓에 연결을 요청
@@ -46,8 +49,7 @@ namespace ServerCore
             this.sessionFactory += sessionFactory;
             listenSocket.Bind(endPoint);
             
-            listenSocket.Listen(10);
-            
+            listenSocket.Listen(LISTEN_COUNT);
             SocketAsyncEventArgs eventArgs = new SocketAsyncEventArgs();
             eventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnAcceptCompleted);
             RegisterAccept(eventArgs);
